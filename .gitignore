@@ -2,3 +2,6 @@
 .DS_Store
 /.venv
 /models/HierarchyModel/__pycache__
+/api/.venv
+/api/.venvW
+/api/api/__pycache__
