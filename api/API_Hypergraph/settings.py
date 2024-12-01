@@ -40,7 +40,17 @@ INSTALLED_APPS = [
     'rest_framework',
     'api',
     'drf_yasg',
+    'fcm_django',
 ]
+
+FCM_API_KEY = 'AIzaSyDxhgvVFPGJV-t37vJeH54ohca3KHqbaCw'
+
+
+FCM_DJANGO_SETTINGS = {
+    "FCM_SERVER_KEY": "AIzaSyDxhgvVFPGJV-t37vJeH54ohca3KHqbaCw",
+    "DEVICE_MODEL": "FCMDevice",
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
