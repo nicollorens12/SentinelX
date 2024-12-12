@@ -6,3 +6,4 @@
 /api/.venvW
 /api/api/__pycache__
 *.pyc
+/trafficGenerator/.venvW
