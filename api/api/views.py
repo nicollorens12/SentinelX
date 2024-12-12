@@ -16,6 +16,8 @@ from api.Hierarchical import HierarchyModel
 import smtplib
 import os
 from dotenv import load_dotenv
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 s = smtplib.SMTP('smtp.gmail.com', 587)
 # start TLS for security
@@ -176,9 +178,19 @@ def send_attack_email(attack_type):
     """
     subject = EMAIL_SUBJECT_TEMPLATE.format(attack_type=attack_type)
     body = EMAIL_BODY_TEMPLATE.format(attack_type=attack_type)
-    
+    from_email = os.getenv("EMAIL_SENDER")
+    to_email = os.getenv("EMAIL_RECEIVER")
+
     try:
-        s.sendmail(os.getenv("EMAIL_SENDER"), os.getenv("EMAIL_RECEIVER"), body)
+        # Construir el mensaje
+        msg = MIMEMultipart()
+        msg['From'] = from_email
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Enviar el correo
+        s.sendmail(from_email, to_email, msg.as_string())
         print(f"Correo de alerta enviado para el ataque {attack_type}")
     except Exception as e:
         print(f"Error al enviar el correo: {e}")

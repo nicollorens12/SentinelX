@@ -53,16 +53,16 @@ def send_benign_traffic():
 def send_attack_traffic():
     while True:
         # Esperar entre 7 y 12 segundos antes del próximo ataque
-        time.sleep(random.randint(7, 12))
+        time.sleep(random.randint(30, 90))
         
         # Seleccionar el tipo de ataque de forma aleatoria
         attack_type = random.choice(["DDoS", "PortScan", "BruteForce", "XSS", "SQLInjection"])
         attack_data = {
             "DDoS": dataDDoS,
             "PortScan": dataPortScan,
-            "BruteForce": dataBot,
-            "XSS": dataInfiltration,
-            "SQLInjection": dataWeb
+            "BruteForce": dataBruteForce,
+            "XSS": dataXSS,
+            "SQLInjection": dataSQLI
         }[attack_type]
         
         # Determinar la duración del ataque
