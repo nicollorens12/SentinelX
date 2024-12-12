@@ -1,4 +1,6 @@
 from django.shortcuts import render
+from django.core.cache import cache  # Importa la cache de Django
+from django.core.mail import send_mail  # Para enviar correos
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
@@ -103,42 +105,79 @@ def get_history_more_datails(request, document_id):
     json_data = json.loads(json_util.dumps(document))
     return Response(json_data)
 
+# Lista de variables esperadas
+expected_variables = [
+    "Fwd IAT Std","Bwd Packet Length Max","Idle Mean","Subflow Fwd Packets","Fwd IAT Min","Bwd IAT Max","Idle Min",
+    "Idle Std","Bwd IAT Total","Avg Fwd Segment Size","Fwd Packet Length Std","Bwd Packets/s","Flow IAT Min","Idle Max",
+    "Bwd IAT Min","Bwd Packet Length Mean","Active Std","Bwd Header Length","Flow Bytes/s","Packet Length Mean","Subflow Bwd Packets",
+    "Bwd Packet Length Std","Total Fwd Packets","Fwd PSH Flags","Subflow Bwd Bytes","Fwd Packets/s","Avg Bwd Segment Size",
+    "Fwd Packet Length Max","Fwd Header Length","Total Backward Packets","Flow IAT Std","Flow Packets/s","Packet Length Variance",
+    "Active Mean","Active Max","Fwd IAT Total","Bwd IAT Std","Active Min","Subflow Fwd Bytes","Fwd IAT Max","URG Flag Count","Flow Duration","Fwd IAT Mean",
+    "Fwd Packet Length Mean","Bwd IAT Mean","SYN Flag Count","Flow IAT Mean","Flow IAT Max","Packet Length Std",
+]
+
+# Configuraciones del correo (puedes configurarlo en settings.py o como constantes aquí)
+EMAIL_FROM = 'nickskate23@gmail.com'  # Cambia esto al correo que usas para enviar
+EMAIL_TO = 'nickskate23@gmail.com'  # Cambia esto al correo del destinatario
+EMAIL_SUBJECT_TEMPLATE = "ALERTA ATAQUE {attack_type}"  # Plantilla para el asunto del correo
+EMAIL_BODY_TEMPLATE = "Has recibido un ataque {attack_type}"  # Plantilla para el cuerpo del correo
+CACHE_TIMEOUT = 60  # Tiempo de espera de 60 segundos para evitar múltiples correos
 
 @api_view(['POST'])
 def process_traffic(request):
-    # Lista de variables esperadas
-    expected_variables = [
-        "Fwd IAT Std","Bwd Packet Length Max","Idle Mean","Subflow Fwd Packets","Fwd IAT Min","Bwd IAT Max","Idle Min",
-        "Idle Std","Bwd IAT Total","Avg Fwd Segment Size","Fwd Packet Length Std","Bwd Packets/s","Flow IAT Min","Idle Max",
-        "Bwd IAT Min","Bwd Packet Length Mean","Active Std","Bwd Header Length","Flow Bytes/s","Packet Length Mean","Subflow Bwd Packets",
-        "Bwd Packet Length Std","Total Fwd Packets","Fwd PSH Flags","Subflow Bwd Bytes","Fwd Packets/s","Avg Bwd Segment Size",
-        "Fwd Packet Length Max","Fwd Header Length","Total Backward Packets","Flow IAT Std","Flow Packets/s","Packet Length Variance",
-        "Active Mean","Active Max","Fwd IAT Total","Bwd IAT Std","Active Min","Subflow Fwd Bytes","Fwd IAT Max","URG Flag Count","Flow Duration","Fwd IAT Mean",
-        "Fwd Packet Length Mean","Bwd IAT Mean","SYN Flag Count","Flow IAT Mean","Flow IAT Max","Packet Length Std",
-    ]
-
     try:
         input_data = request.data
 
+        # Verificar si faltan variables requeridas
         missing_vars = [var for var in expected_variables if var not in input_data]
-        if missing_vars:# all(var in input_data for var in expected_variables):
+        if missing_vars:
             return Response(
                 {"error": f"Missing required fields: {', '.join(missing_vars)}."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Crear DataFrame con los datos de entrada
         data = pd.DataFrame([input_data], columns=expected_variables)
 
+        # Realizar la predicción
         predictions = hierarchy_model.predict(data)
-        if predictions.tolist()[0] != "BENIGN":
-            save_attack(input_data, predictions.tolist()[0])
+        prediction_label = predictions.tolist()[0]  # Obtener la predicción como cadena
+        
+        if prediction_label != "BENIGN":
+            save_attack(input_data, prediction_label)  # Guardar el ataque detectado
 
-        ##db.logs_attacks.insert_one(json.loads(dataToSave)) ##saveToLogs
+            # Verificar si ha pasado suficiente tiempo desde la última alerta de este tipo de ataque
+            cache_key = f"attack_alert_{prediction_label}"  # Clave única para la cache por tipo de ataque
+            last_alert_time = cache.get(cache_key)
+            
+            if not last_alert_time:  # Si no hay un registro en la cache, se envía el correo
+                send_attack_email(prediction_label)  # Enviar el correo de alerta
+                cache.set(cache_key, True, CACHE_TIMEOUT)  # Guardar en cache con tiempo de expiración
+
         return Response({"predictions": predictions.tolist()}, status=status.HTTP_200_OK)
-
+    
     except Exception as e:
         # Manejo de errores
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+def send_attack_email(attack_type):
+    """
+    Envía un correo electrónico notificando sobre el ataque detectado.
+    """
+    subject = EMAIL_SUBJECT_TEMPLATE.format(attack_type=attack_type)
+    body = EMAIL_BODY_TEMPLATE.format(attack_type=attack_type)
+    
+    try:
+        send_mail(
+            subject,
+            body,
+            EMAIL_FROM,
+            [EMAIL_TO],
+            fail_silently=False,  # Para recibir errores si algo sale mal
+        )
+        print(f"Correo de alerta enviado para el ataque {attack_type}")
+    except Exception as e:
+        print(f"Error al enviar el correo: {e}")
 
 
 def generate_ip():
