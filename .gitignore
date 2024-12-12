@@ -1,8 +1,11 @@
 
 .DS_Store
 /.venv
+/.venvW
 /models/HierarchyModel/__pycache__
 /api/.venv
 /api/.venvW
 /api/api/__pycache__
 *.pyc
+/trafficGenerator/.venvW
+/trafficGenerator/.venv

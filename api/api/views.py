@@ -11,9 +11,19 @@ from bson.objectid import ObjectId
 import json
 import random
 from datetime import datetime
-
 import pandas as pd
 from api.Hierarchical import HierarchyModel
+import smtplib
+import os
+from dotenv import load_dotenv
+
+s = smtplib.SMTP('smtp.gmail.com', 587)
+# start TLS for security
+s.starttls()
+# Authentication
+load_dotenv()  # Load environment variables from .env file
+
+s.login(os.getenv("EMAIL_SENDER"), os.getenv("EMAIL_SENDER_PSWD"))
 
 hierarchy_model = HierarchyModel(
     model_lvl1='api/LayerModels/model_lvl1_rf.joblib',
@@ -168,13 +178,7 @@ def send_attack_email(attack_type):
     body = EMAIL_BODY_TEMPLATE.format(attack_type=attack_type)
     
     try:
-        send_mail(
-            subject,
-            body,
-            EMAIL_FROM,
-            [EMAIL_TO],
-            fail_silently=False,  # Para recibir errores si algo sale mal
-        )
+        s.sendmail(os.getenv("EMAIL_SENDER"), os.getenv("EMAIL_RECEIVER"), body)
         print(f"Correo de alerta enviado para el ataque {attack_type}")
     except Exception as e:
         print(f"Error al enviar el correo: {e}")
