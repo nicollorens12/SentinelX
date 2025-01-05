@@ -5,7 +5,7 @@ import time
 from threading import Thread
 
 csv_file_path = "dataset_reducido.csv"
-api_url = "http://127.0.0.1:8000/api/process_traffic/"
+api_url = "http://13.38.227.46:8000/api/process_traffic/"
 
 dataset = pd.read_csv(csv_file_path)
 
@@ -43,7 +43,7 @@ def send_row(row):
 def send_benign_traffic():
     while True:
         # Determinar cuántos paquetes benignos enviar en este segundo (entre 6 y 9)
-        packets_to_send = random.randint(6, 9)
+        packets_to_send = random.randint(10, 20)
         for _ in range(packets_to_send):
             random_row = dataBenign.sample(1).to_dict(orient="records")[0]
             send_row(random_row)
@@ -53,14 +53,14 @@ def send_benign_traffic():
 def send_attack_traffic():
     while True:
         # Esperar entre 7 y 12 segundos antes del próximo ataque
-        time.sleep(random.randint(30, 90))
+        time.sleep(random.randint(30, 45))
         
         # Seleccionar el tipo de ataque de forma aleatoria
-        attack_type = random.choice(["DDoS", "PortScan", "BruteForce", "XSS", "SQLInjection"])
+        attack_type = random.choice([ "XSS", "SQLInjection"])
         attack_data = {
-            "DDoS": dataDDoS,
-            "PortScan": dataPortScan,
-            "BruteForce": dataBruteForce,
+            #"DDoS": dataDDoS,
+            #"PortScan": dataPortScan,
+            #"BruteForce": dataBruteForce,
             "XSS": dataXSS,
             "SQLInjection": dataSQLI
         }[attack_type]
