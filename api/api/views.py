@@ -172,6 +172,14 @@ def process_traffic(request):
         # Manejo de errores
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Cargar variables de entorno
+
 def send_attack_email(attack_type):
     """
     Envía un correo electrónico notificando sobre el ataque detectado.
@@ -182,18 +190,24 @@ def send_attack_email(attack_type):
     to_email = os.getenv("EMAIL_RECEIVER")
 
     try:
-        # Construir el mensaje
-        msg = MIMEMultipart()
-        msg['From'] = from_email
-        msg['To'] = to_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-        
-        # Enviar el correo
-        s.sendmail(from_email, to_email, msg.as_string())
-        print(f"Correo de alerta enviado para el ataque {attack_type}")
+        # Crear conexión SMTP en cada envío
+        with smtplib.SMTP('smtp.gmail.com', 587) as s:
+            s.starttls()  # Iniciar TLS
+            s.login(from_email, os.getenv("EMAIL_SENDER_PSWD"))  # Iniciar sesión
+
+            # Construir el mensaje
+            msg = MIMEMultipart()
+            msg['From'] = from_email
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body, 'plain'))
+            
+            # Enviar el correo
+            s.sendmail(from_email, to_email, msg.as_string())
+            print(f"Correo de alerta enviado para el ataque {attack_type}")
     except Exception as e:
         print(f"Error al enviar el correo: {e}")
+
 
 
 def generate_ip():

@@ -53,7 +53,7 @@ def send_benign_traffic():
 def send_attack_traffic():
     while True:
         # Esperar entre 7 y 12 segundos antes del próximo ataque
-        time.sleep(random.randint(30, 45))
+        time.sleep(random.randint(10, 20))
         
         # Seleccionar el tipo de ataque de forma aleatoria
         attack_type = random.choice([ "XSS", "SQLInjection"])
