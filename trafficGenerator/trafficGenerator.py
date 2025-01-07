@@ -43,7 +43,7 @@ def send_row(row):
 def send_benign_traffic():
     while True:
         # Determinar cuántos paquetes benignos enviar en este segundo (entre 6 y 9)
-        packets_to_send = random.randint(6, 9)
+        packets_to_send = random.randint(10, 20)
         for _ in range(packets_to_send):
             random_row = dataBenign.sample(1).to_dict(orient="records")[0]
             send_row(random_row)
@@ -56,11 +56,11 @@ def send_attack_traffic():
         time.sleep(random.randint(10, 20))
         
         # Seleccionar el tipo de ataque de forma aleatoria
-        attack_type = random.choice(["DDoS", "PortScan", "BruteForce", "XSS", "SQLInjection"])
+        attack_type = random.choice([ "XSS", "SQLInjection"])
         attack_data = {
-            "DDoS": dataDDoS,
-            "PortScan": dataPortScan,
-            "BruteForce": dataBruteForce,
+            #"DDoS": dataDDoS,
+            #"PortScan": dataPortScan,
+            #"BruteForce": dataBruteForce,
             "XSS": dataXSS,
             "SQLInjection": dataSQLI
         }[attack_type]
