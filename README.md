@@ -4,6 +4,12 @@ This is the code repository for the course Applied Engenieering Project (PAE) at
 
 Our solution was called SentinelX. And eventhough Hypergraph AI are using much complex models like GNNs, that understand the context of the network where the traffic comes thanks to the Graph component of the NN we didn't want to copy their recipy and we wanted to explore other options. They were really happy that we tried a different approach. We used a simple 3-layer model that could detect malign traffic and we created a macOS app that showed the real time traffic and the attacks detected.
 
+## Authors
+
+This project was made by:
+- Nicolas Llorens Somalo
+- Richard Pie Sánchez
+- Daniel Sánchez Peláez
 
 ## Folder Structure 
 
